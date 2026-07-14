@@ -58,14 +58,14 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">กลุ่มบริหาร</label>
-                        <input type="text" id="department" required class="input-field" list="departmentDatalist" placeholder="-- เลือกหรือพิมพ์กลุ่มบริหาร --" autocomplete="off">
-                        <datalist id="departmentDatalist">
-                            <option value="วิชาการ">
-                            <option value="กิจการนักเรียน">
-                            <option value="งบประมาณและแผนงาน">
-                            <option value="ทั่วไป">
-                            <option value="งานบุคคล">
-                        </datalist>
+                        <select id="department" required class="input-field bg-white">
+                            <option value="">-- เลือกกลุ่มบริหาร --</option>
+                            <option value="วิชาการ">วิชาการ</option>
+                            <option value="กิจการนักเรียน">กิจการนักเรียน</option>
+                            <option value="งบประมาณและแผนงาน">งบประมาณและแผนงาน</option>
+                            <option value="ทั่วไป">ทั่วไป</option>
+                            <option value="งานบุคคล">งานบุคคล</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">กลุ่มสาระฯ / งาน</label>
@@ -74,8 +74,9 @@
 
                     <div class="md:col-span-3">
                         <label class="block text-sm font-medium text-gray-700 mb-1">โครงการ</label>
-                        <input type="text" id="project" required class="input-field" list="projectDatalist" placeholder="-- เลือกหรือพิมพ์ชื่อโครงการ --" autocomplete="off" oninput="onProjectFieldChange('project','activityDatalist','planDatalist')" onchange="onProjectFieldChange('project','activityDatalist','planDatalist')">
-                        <datalist id="projectDatalist"></datalist>
+                        <select id="project" required class="input-field bg-white" onchange="onProjectFieldChange('project','activityDatalist','plan')">
+                            <option value="">-- กำลังโหลด... --</option>
+                        </select>
                     </div>
 
                     <div class="md:col-span-3">
@@ -91,8 +92,9 @@
 
                     <div class="md:col-span-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1">มีความประสงค์ใช้เงินสำหรับการ</label>
-                        <input type="text" id="purpose" required class="input-field" list="purposeDatalist" placeholder="-- เลือกหรือพิมพ์ --" autocomplete="off" oninput="togglePurposeOther()" onchange="togglePurposeOther()">
-                        <datalist id="purposeDatalist"></datalist>
+                        <select id="purpose" required class="input-field bg-white" onchange="togglePurposeOther()">
+                            <option value="">-- กำลังโหลด... --</option>
+                        </select>
                     </div>
 
                     <div class="md:col-span-2 hidden" id="purpose_other_div">
@@ -102,8 +104,9 @@
 
                     <div class="md:col-span-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1">โดยใช้เงิน</label>
-                        <input type="text" id="funding_source" required class="input-field" list="fundingSourceDatalist" placeholder="-- เลือกหรือพิมพ์ประเภทเงิน --" autocomplete="off" oninput="toggleFundingSourceOther()" onchange="toggleFundingSourceOther()">
-                        <datalist id="fundingSourceDatalist"></datalist>
+                        <select id="funding_source" required class="input-field bg-white" onchange="toggleFundingSourceOther()">
+                            <option value="">-- กำลังโหลด... --</option>
+                        </select>
                     </div>
 
                     <div class="md:col-span-2 hidden" id="funding_source_other_div">
@@ -113,8 +116,9 @@
 
                     <div class="md:col-span-3">
                         <label class="block text-sm font-medium text-gray-700 mb-1">ตามแผนงาน</label>
-                        <input type="text" id="plan" required class="input-field" list="planDatalist" placeholder="-- เลือกโครงการก่อน หรือพิมพ์แผนงาน --" autocomplete="off">
-                        <datalist id="planDatalist"></datalist>
+                        <select id="plan" required class="input-field bg-white">
+                            <option value="">-- เลือกโครงการก่อน --</option>
+                        </select>
                     </div>
 
                     <div>
@@ -146,13 +150,15 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ผู้รับผิดชอบโครงการ</label>
-                        <input type="text" id="director_name2" required class="input-field" list="directorName2Datalist" placeholder="-- เลือกหรือพิมพ์ผู้รับผิดชอบ --" autocomplete="off">
-                        <datalist id="directorName2Datalist"></datalist>
+                        <select id="director_name2" required class="input-field bg-white">
+                            <option value="">-- กำลังโหลด... --</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อรองผู้อำนวยการ</label>
-                        <input type="text" id="director_name3" required class="input-field" list="directorName3Datalist" placeholder="-- เลือกหรือพิมพ์รองผู้อำนวยการ --" autocomplete="off">
-                        <datalist id="directorName3Datalist"></datalist>
+                        <select id="director_name3" required class="input-field bg-white">
+                            <option value="">-- กำลังโหลด... --</option>
+                        </select>
                     </div>
                 </div>
 
@@ -213,6 +219,26 @@
                 </button>
             </div>
 
+            <!-- แผงตัวกรอง -->
+            <div class="bg-white rounded-xl shadow p-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">โครงการ</label>
+                        <select id="historyFilterProject" class="input-field bg-white text-sm" onchange="applyHistoryFilters()">
+                            <option value="">-- ทั้งหมด --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">กิจกรรม</label>
+                        <input type="text" id="historyFilterActivity" class="input-field text-sm" placeholder="ค้นหากิจกรรม..." oninput="applyHistoryFilters()">
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-between items-center flex-wrap gap-2">
+                    <span id="historyFilterCount" class="text-xs text-gray-500"></span>
+                    <button type="button" onclick="clearHistoryFilters()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">✕ ล้างตัวกรอง</button>
+                </div>
+            </div>
+
             <div class="bg-white rounded-xl shadow overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left">
@@ -233,6 +259,7 @@
                 </div>
             </div>
         </div>
+
 
 
         <!-- ========================================== -->
@@ -325,7 +352,14 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">กลุ่มบริหาร</label>
-                    <input type="text" id="edit_department" required class="input-field" list="departmentDatalist" placeholder="-- เลือกหรือพิมพ์กลุ่มบริหาร --" autocomplete="off">
+                    <select id="edit_department" required class="input-field bg-white">
+                        <option value="">-- เลือกกลุ่มบริหาร --</option>
+                        <option value="วิชาการ">วิชาการ</option>
+                        <option value="กิจการนักเรียน">กิจการนักเรียน</option>
+                        <option value="งบประมาณและแผนงาน">งบประมาณและแผนงาน</option>
+                        <option value="ทั่วไป">ทั่วไป</option>
+                        <option value="งานบุคคล">งานบุคคล</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">กลุ่มสาระฯ / งาน</label>
@@ -334,7 +368,9 @@
 
                 <div class="md:col-span-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">โครงการ</label>
-                    <input type="text" id="edit_project" required class="input-field" list="projectDatalist" placeholder="-- เลือกหรือพิมพ์ชื่อโครงการ --" autocomplete="off" oninput="onProjectFieldChange('edit_project','editActivityDatalist','editPlanDatalist')" onchange="onProjectFieldChange('edit_project','editActivityDatalist','editPlanDatalist')">
+                    <select id="edit_project" required class="input-field bg-white" onchange="onProjectFieldChange('edit_project','editActivityDatalist','edit_plan')">
+                        <option value="">-- กำลังโหลด... --</option>
+                    </select>
                 </div>
 
                 <div class="md:col-span-3">
@@ -350,7 +386,9 @@
 
                 <div class="md:col-span-1">
                     <label class="block text-sm font-medium text-gray-700 mb-1">มีความประสงค์ใช้เงินสำหรับการ</label>
-                    <input type="text" id="edit_purpose" required class="input-field" list="purposeDatalist" placeholder="-- เลือกหรือพิมพ์ --" autocomplete="off" oninput="toggleEditPurposeOther()" onchange="toggleEditPurposeOther()">
+                    <select id="edit_purpose" required class="input-field bg-white" onchange="toggleEditPurposeOther()">
+                        <option value="">-- กำลังโหลด... --</option>
+                    </select>
                 </div>
 
                 <div class="md:col-span-2 hidden" id="edit_purpose_other_div">
@@ -360,7 +398,9 @@
 
                 <div class="md:col-span-1">
                     <label class="block text-sm font-medium text-gray-700 mb-1">โดยใช้เงิน</label>
-                    <input type="text" id="edit_funding_source" required class="input-field" list="fundingSourceDatalist" placeholder="-- เลือกหรือพิมพ์ประเภทเงิน --" autocomplete="off" oninput="toggleEditFundingSourceOther()" onchange="toggleEditFundingSourceOther()">
+                    <select id="edit_funding_source" required class="input-field bg-white" onchange="toggleEditFundingSourceOther()">
+                        <option value="">-- กำลังโหลด... --</option>
+                    </select>
                 </div>
 
                 <div class="md:col-span-2 hidden" id="edit_funding_source_other_div">
@@ -370,8 +410,9 @@
 
                 <div class="md:col-span-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">ตามแผนงาน</label>
-                    <input type="text" id="edit_plan" required class="input-field" list="editPlanDatalist" placeholder="-- เลือกโครงการก่อน หรือพิมพ์แผนงาน --" autocomplete="off">
-                    <datalist id="editPlanDatalist"></datalist>
+                    <select id="edit_plan" required class="input-field bg-white">
+                        <option value="">-- เลือกโครงการก่อน --</option>
+                    </select>
                 </div>
 
                 <div>
@@ -403,11 +444,15 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">ผู้รับผิดชอบโครงการ</label>
-                    <input type="text" id="edit_director_name2" required class="input-field" list="directorName2Datalist" placeholder="-- เลือกหรือพิมพ์ผู้รับผิดชอบ --" autocomplete="off">
+                    <select id="edit_director_name2" required class="input-field bg-white">
+                        <option value="">-- กำลังโหลด... --</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อรองผู้อำนวยการ</label>
-                    <input type="text" id="edit_director_name3" required class="input-field" list="directorName3Datalist" placeholder="-- เลือกหรือพิมพ์รองผู้อำนวยการ --" autocomplete="off">
+                    <select id="edit_director_name3" required class="input-field bg-white">
+                        <option value="">-- กำลังโหลด... --</option>
+                    </select>
                 </div>
             </div>
 
@@ -582,7 +627,7 @@
             });
         }
 
-        // เติม <option> ให้ datalist ตัวใดตัวหนึ่งจากรายการที่กำหนด (ไม่แตะค่าที่ผู้ใช้พิมพ์ไว้ในช่อง input)
+        // เติม <option> ให้ datalist ตัวใดตัวหนึ่งจากรายการที่กำหนด (ไม่แตะค่าที่ผู้ใช้พิมพ์ไว้ในช่อง input) — ใช้กับช่องที่ยังพิมพ์เองได้ เช่น กลุ่มบริหาร, กิจกรรม, ผู้รับผิดชอบ
         function populateDatalist(datalistId, items) {
             let datalist = document.getElementById(datalistId);
             if (!datalist) return;
@@ -594,51 +639,81 @@
             });
         }
 
-        // เติมดรอปดาวน์ (datalist) ทั้งหมด ทั้งในฟอร์มหลักและฟอร์มแก้ไขของแอดมิน
+        // เติม <option> ให้ select ตัวใดตัวหนึ่งจากรายการที่กำหนด โดยพยายามคงค่าที่เลือกไว้เดิม (ถ้ายังอยู่ในลิสต์ใหม่)
+        // ใช้กับช่องที่ต้องเลือกจากลิสต์เท่านั้น ห้ามพิมพ์เอง เช่น โครงการ, วัตถุประสงค์, ประเภทเงิน, แผนงาน
+        function populateSelectOptions(selectId, items, placeholder) {
+            let select = document.getElementById(selectId);
+            if (!select) return;
+            let currentValue = select.value;
+
+            select.innerHTML = '';
+            let placeholderOpt = document.createElement('option');
+            placeholderOpt.value = '';
+            placeholderOpt.textContent = placeholder;
+            select.appendChild(placeholderOpt);
+
+            (items || []).forEach(item => {
+                let opt = document.createElement('option');
+                opt.value = item;
+                opt.textContent = item;
+                select.appendChild(opt);
+            });
+
+            if (currentValue && items && items.indexOf(currentValue) !== -1) {
+                select.value = currentValue;
+            }
+        }
+
+        // เติมดรอปดาวน์ทั้งหมด ทั้งในฟอร์มหลักและฟอร์มแก้ไขของแอดมิน
         function populateAllDropdowns() {
-            populateDatalist('departmentDatalist', ['วิชาการ', 'กิจการนักเรียน', 'งบประมาณและแผนงาน', 'ทั่วไป', 'งานบุคคล']);
-            populateDatalist('projectDatalist', appSettings.project);
-            populateDatalist('purposeDatalist', appSettings.purpose);
-            populateDatalist('fundingSourceDatalist', appSettings.funding_source);
-            populateDatalist('directorName2Datalist', appSettings.director_name2);
-            populateDatalist('directorName3Datalist', appSettings.director_name3);
+            populateSelectOptions('project', appSettings.project, '-- เลือกโครงการ --');
+            populateSelectOptions('purpose', appSettings.purpose, '-- เลือก --');
+            populateSelectOptions('funding_source', appSettings.funding_source, '-- เลือกประเภทเงิน --');
+            populateSelectOptions('director_name2', appSettings.director_name2, '-- เลือกผู้รับผิดชอบ --');
+            populateSelectOptions('director_name3', appSettings.director_name3, '-- เลือกรองผู้อำนวยการ --');
 
-            // เติมรายการกิจกรรม/แผนงาน ตามโครงการที่กำลังเลือกอยู่ในแต่ละฟอร์ม (ถ้ามีการเลือกไว้แล้ว)
-            onProjectFieldChange('project', 'activityDatalist', 'planDatalist');
-            onProjectFieldChange('edit_project', 'editActivityDatalist', 'editPlanDatalist');
+            populateSelectOptions('edit_project', appSettings.project, '-- เลือกโครงการ --');
+            populateSelectOptions('edit_purpose', appSettings.purpose, '-- เลือก --');
+            populateSelectOptions('edit_funding_source', appSettings.funding_source, '-- เลือกประเภทเงิน --');
+            populateSelectOptions('edit_director_name2', appSettings.director_name2, '-- เลือกผู้รับผิดชอบ --');
+            populateSelectOptions('edit_director_name3', appSettings.director_name3, '-- เลือกรองผู้อำนวยการ --');
+
+            // เติมรายการกิจกรรม (พิมพ์ได้) + แผนงาน (เลือกอย่างเดียว) ตามโครงการที่กำลังเลือกอยู่ในแต่ละฟอร์ม
+            onProjectFieldChange('project', 'activityDatalist', 'plan');
+            onProjectFieldChange('edit_project', 'editActivityDatalist', 'edit_plan');
         }
 
-        // --- ดรอปดาวน์ 2 ชั้น: เมื่อพิมพ์/เลือกโครงการ ให้เติมรายชื่อกิจกรรม + แผนงานของโครงการนั้น ---
-        function onProjectFieldChange(projectInputId, activityDatalistId, planDatalistId) {
-            let projectInput = document.getElementById(projectInputId);
-            if (!projectInput) return;
-            let projectValue = projectInput.value;
+        // --- ดรอปดาวน์ 2 ชั้น: เมื่อเลือกโครงการ ให้เติมรายชื่อกิจกรรม (พิมพ์ได้) + แผนงาน (เลือกอย่างเดียว) ของโครงการนั้น ---
+        function onProjectFieldChange(projectSelectId, activityDatalistId, planSelectId) {
+            let projectSelect = document.getElementById(projectSelectId);
+            if (!projectSelect) return;
+            let projectValue = projectSelect.value;
             populateDatalist(activityDatalistId, appActivities[projectValue] || []);
-            if (planDatalistId) {
-                populateDatalist(planDatalistId, appPlans[projectValue] || []);
+            if (planSelectId) {
+                populateSelectOptions(planSelectId, appPlans[projectValue] || [], '-- เลือกแผนงาน --');
             }
         }
 
-        // ถ้าโครงการที่เพิ่งแก้ไขแผนงาน ตรงกับโครงการที่กำลังถูกเลือกอยู่ในฟอร์มหลัก/ฟอร์มแก้ไข ให้รีเฟรชรายการแผนงานทันที
+        // ถ้าโครงการที่เพิ่งแก้ไขแผนงาน ตรงกับโครงการที่กำลังถูกเลือกอยู่ในฟอร์มหลัก/ฟอร์มแก้ไข ให้รีเฟรชตัวเลือกแผนงานทันที
         function refreshPlanDatalistsIfMatching(project) {
-            let projectInput = document.getElementById('project');
-            let editProjectInput = document.getElementById('edit_project');
-            if (projectInput && projectInput.value === project) {
-                populateDatalist('planDatalist', appPlans[project] || []);
+            let projectSelect = document.getElementById('project');
+            let editProjectSelect = document.getElementById('edit_project');
+            if (projectSelect && projectSelect.value === project) {
+                populateSelectOptions('plan', appPlans[project] || [], '-- เลือกแผนงาน --');
             }
-            if (editProjectInput && editProjectInput.value === project) {
-                populateDatalist('editPlanDatalist', appPlans[project] || []);
+            if (editProjectSelect && editProjectSelect.value === project) {
+                populateSelectOptions('edit_plan', appPlans[project] || [], '-- เลือกแผนงาน --');
             }
         }
 
         // ถ้าโครงการที่เพิ่งแก้ไขกิจกรรม ตรงกับโครงการที่กำลังถูกเลือกอยู่ในฟอร์มหลัก/ฟอร์มแก้ไข ให้รีเฟรชรายการกิจกรรมทันที
         function refreshActivityDatalistsIfMatching(project) {
-            let projectInput = document.getElementById('project');
-            let editProjectInput = document.getElementById('edit_project');
-            if (projectInput && projectInput.value === project) {
+            let projectSelect = document.getElementById('project');
+            let editProjectSelect = document.getElementById('edit_project');
+            if (projectSelect && projectSelect.value === project) {
                 populateDatalist('activityDatalist', appActivities[project] || []);
             }
-            if (editProjectInput && editProjectInput.value === project) {
+            if (editProjectSelect && editProjectSelect.value === project) {
                 populateDatalist('editActivityDatalist', appActivities[project] || []);
             }
         }
@@ -1167,47 +1242,106 @@
         // ==========================================
         // สคริปต์ส่วน "ประวัติ (History)"
         // ==========================================
+        // เก็บข้อมูลประวัติทั้งหมดที่โหลดมาล่าสุด (ไม่ผ่านการกรอง) ไว้ใช้กรองฝั่ง client
+        let historyData = [];
+
         function loadHistoryData() {
             Swal.fire({title: 'กำลังโหลดข้อมูลประวัติ...', didOpen: () => Swal.showLoading()});
 
             callAPI('getData', {})
             .then(data => {
-                let html = '';
-
-                if(!data || data.length === 0) {
-                    html = '<tr><td colspan="7" class="p-4 text-center text-gray-500">ยังไม่มีประวัติรายการขออนุมัติ</td></tr>';
-                } else {
-                    data.forEach((row) => {
-                        let dDate = '-';
-                        if (row.date) {
-                            let parsedDate = new Date(row.date);
-                            if (!isNaN(parsedDate)) dDate = parsedDate.toLocaleDateString('th-TH');
-                        }
-
-                        let amt = Number(row.totalAll || 0).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-                        html += `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 font-semibold text-blue-600">${row.id || '-'}</td>
-                                <td class="p-3">${dDate}</td>
-                                <td class="p-3">${row.project || '-'} <br><span class="text-xs text-gray-500">${row.activity || ''}</span></td>
-                                <td class="p-3">${row.director_name1 || '-'}</td>
-                                <td class="p-3 text-right font-bold text-gray-800">${amt}</td>
-                                <td class="p-3 text-center">
-                                    ${row.pdfUrl ? `<a href="${row.pdfUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-center justify-center"><svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>เปิด PDF</a>` : '<span class="text-gray-400">ไม่มี PDF</span>'}
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-
-                document.getElementById('historyTableBody').innerHTML = html;
+                historyData = data || [];
+                populateHistoryProjectFilter();
+                applyHistoryFilters();
                 Swal.close();
             })
             .catch(error => {
                 console.error("Error from server:", error);
                 Swal.fire('โหลดข้อมูลล้มเหลว', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้: ' + error.message, 'error');
             });
+        }
+
+        // เติมตัวเลือกในดรอปดาวน์ "โครงการ" ของแผงตัวกรอง โดยรวมทั้งโครงการที่ตั้งค่าไว้ปัจจุบัน และโครงการเก่าที่เคยมีในประวัติ (เผื่อถูกลบ/แก้ชื่อไปแล้ว)
+        function populateHistoryProjectFilter() {
+            let select = document.getElementById('historyFilterProject');
+            if (!select) return;
+            let currentValue = select.value;
+
+            let projectSet = new Set(appSettings.project || []);
+            historyData.forEach(row => { if (row.project) projectSet.add(row.project); });
+            let projectList = Array.from(projectSet).sort((a, b) => a.localeCompare(b, 'th'));
+
+            select.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+            projectList.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                select.appendChild(opt);
+            });
+
+            if (currentValue && projectList.indexOf(currentValue) !== -1) {
+                select.value = currentValue;
+            }
+        }
+
+        // กรองข้อมูลประวัติตามเงื่อนไขในแผงตัวกรอง แล้ววาดตารางใหม่
+        function applyHistoryFilters() {
+            let projectFilter = document.getElementById('historyFilterProject').value;
+            let activityFilter = document.getElementById('historyFilterActivity').value.trim().toLowerCase();
+
+            let filtered = historyData.filter(row => {
+                if (projectFilter && row.project !== projectFilter) return false;
+                if (activityFilter && !(row.activity || '').toLowerCase().includes(activityFilter)) return false;
+                return true;
+            });
+
+            renderHistoryTable(filtered);
+
+            let countLabel = document.getElementById('historyFilterCount');
+            if (countLabel) {
+                countLabel.textContent = `แสดง ${filtered.length} จาก ${historyData.length} รายการ`;
+            }
+        }
+
+        // ล้างตัวกรองทั้งหมดแล้วแสดงข้อมูลทั้งหมดอีกครั้ง
+        function clearHistoryFilters() {
+            document.getElementById('historyFilterProject').value = '';
+            document.getElementById('historyFilterActivity').value = '';
+            applyHistoryFilters();
+        }
+
+        // วาดตารางประวัติจากข้อมูลที่ส่งเข้ามา (ใช้ทั้งตอนโหลดครั้งแรกและตอนกรอง)
+        function renderHistoryTable(data) {
+            let html = '';
+
+            if (!data || data.length === 0) {
+                html = '<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่พบรายการที่ตรงกับเงื่อนไขที่กรอง</td></tr>';
+            } else {
+                data.forEach((row) => {
+                    let dDate = '-';
+                    if (row.date) {
+                        let parsedDate = new Date(row.date);
+                        if (!isNaN(parsedDate)) dDate = parsedDate.toLocaleDateString('th-TH');
+                    }
+
+                    let amt = Number(row.totalAll || 0).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                    html += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 font-semibold text-blue-600">${row.id || '-'}</td>
+                            <td class="p-3">${dDate}</td>
+                            <td class="p-3">${row.project || '-'} <br><span class="text-xs text-gray-500">${row.activity || ''}</span></td>
+                            <td class="p-3">${row.director_name1 || '-'}</td>
+                            <td class="p-3 text-right font-bold text-gray-800">${amt}</td>
+                            <td class="p-3 text-center">
+                                ${row.pdfUrl ? `<a href="${row.pdfUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-center justify-center"><svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>เปิด PDF</a>` : '<span class="text-gray-400">ไม่มี PDF</span>'}
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('historyTableBody').innerHTML = html;
         }
 
         // ==========================================
@@ -1330,7 +1464,7 @@
             document.getElementById('edit_department').value = row.department || '';
             document.getElementById('edit_group').value = row.group || '';
             document.getElementById('edit_project').value = row.project || '';
-            onProjectFieldChange('edit_project', 'editActivityDatalist', 'editPlanDatalist'); // เติมรายชื่อกิจกรรม/แผนงานของโครงการนี้ก่อนตั้งค่า
+            onProjectFieldChange('edit_project', 'editActivityDatalist', 'edit_plan'); // เติมรายชื่อกิจกรรม/แผนงานของโครงการนี้ก่อนตั้งค่า
             document.getElementById('edit_activity').value = row.activity || '';
             document.getElementById('edit_objective').value = row.objective || '';
             document.getElementById('edit_purpose').value = row.purpose || '';
