@@ -6,6 +6,9 @@
     <title>ระบบขออนุมัติใช้งบประมาณ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Firebase: ใช้เป็นฐานข้อมูลสำหรับอ่านข้อมูลมาแสดงผลให้เว็บโหลดไวขึ้น (ข้อมูลจริงยังคงอยู่ที่ Google Sheets เป็นหลัก) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; margin: 0; padding: 0; }
@@ -46,7 +49,7 @@
         <div id="formSection" class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden block">
             <div class="bg-blue-700 text-white p-6 text-center">
                 <h1 class="text-2xl font-bold">บันทึกข้อความ ขออนุมัติใช้งบประมาณ</h1>
-                <p class="text-blue-100 mt-2">โรงเรียนราษฎร์อุปถัมภ์ จังหวัดราชบุรี</p>
+                <p class="text-blue-100 mt-2">โรงเรียนรัฐราษฎร์อุปถัมภ์</p>
             </div>
 
             <form id="budgetForm" class="p-6" onsubmit="submitForm(event)">
@@ -58,7 +61,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">กลุ่มบริหาร</label>
-                        <select id="department" required class="input-field bg-white">
+                        <select id="department" required class="input-field bg-white" onchange="onDepartmentFieldChange('department','project','activityDatalist','plan')">
                             <option value="">-- เลือกกลุ่มบริหาร --</option>
                             <option value="วิชาการ">วิชาการ</option>
                             <option value="กิจการนักเรียน">กิจการนักเรียน</option>
@@ -343,7 +346,7 @@
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center p-4 z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
             <h2 class="text-xl font-bold mb-4">แก้ไขข้อมูล <span id="editIdDisplay" class="text-blue-600"></span></h2>
-            <input type="hidden" id="editRowIndex">
+            <input type="hidden" id="editRequestId">
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
@@ -352,7 +355,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">กลุ่มบริหาร</label>
-                    <select id="edit_department" required class="input-field bg-white">
+                    <select id="edit_department" required class="input-field bg-white" onchange="onDepartmentFieldChange('edit_department','edit_project','editActivityDatalist','edit_plan')">
                         <option value="">-- เลือกกลุ่มบริหาร --</option>
                         <option value="วิชาการ">วิชาการ</option>
                         <option value="กิจการนักเรียน">กิจการนักเรียน</option>
@@ -532,6 +535,141 @@
             });
         }
 
+        // ==========================================
+        // ตั้งค่า Firebase (Firestore) — ใช้เป็นฐานข้อมูล "อ่านเร็ว" สำหรับแสดงผลหน้าเว็บ
+        // ==========================================
+        // ข้อมูลจริง (source of truth) ยังคงเป็น Google Sheets ผ่าน Apps Script เสมอ
+        // ทุกครั้งที่บันทึก/แก้ไข/ลบ ระบบจะเขียนลง Google Sheets ก่อน แล้วค่อย "มิเรอร์" ข้อมูลเดียวกันไปที่ Firestore ด้วย
+        // ถ้า Firebase ยังไม่ได้ตั้งค่า หรืออ่าน/เขียนไม่สำเร็จ ระบบจะ fallback ไปใช้ Google Sheets โดยอัตโนมัติ ไม่กระทบการใช้งาน
+        //
+        // วิธีตั้งค่า:
+        // 1. ไปที่ https://console.firebase.google.com -> สร้างโปรเจกต์ใหม่ (ฟรี)
+        // 2. เมนูซ้าย -> Build -> Firestore Database -> Create database (เลือกโหมด Production หรือ Test)
+        // 3. ไปที่ ⚙️ Project settings -> เลื่อนลงมา "Your apps" -> คลิกไอคอน Web (</>) เพื่อเพิ่มเว็บแอป
+        // 4. คัดลอกค่า firebaseConfig ที่ได้ มาแทนที่ค่าด้านล่างนี้ทั้งหมด
+        // 5. ไปที่แท็บ Rules ของ Firestore แล้วตั้งค่าสิทธิ์อ่าน/เขียนตามความเหมาะสม เช่น (สำหรับทดลองใช้งานภายในเท่านั้น):
+        //      rules_version = '2';
+        //      service cloud.firestore {
+        //        match /databases/{database}/documents {
+        //          match /{document=**} {
+        //            allow read, write: if true;
+        //          }
+        //        }
+        //      }
+        //    ⚠️ กฎด้านบนเปิดให้ทุกคนอ่าน/เขียนได้ เหมาะกับการทดลองเท่านั้น ก่อนใช้งานจริงควรจำกัดสิทธิ์ให้รัดกุมขึ้น
+        const firebaseConfig = {
+            apiKey: "AIzaSyCtgV2rmjkntya4G2GOM8S39nLnGwOMUgQ",
+            authDomain: "budget-approval-83bc6.firebaseapp.com",
+            projectId: "budget-approval-83bc6",
+            storageBucket: "budget-approval-83bc6.firebasestorage.app",
+            messagingSenderId: "334356329185",
+            appId: "1:334356329185:web:79410220226d41aa52fda0"
+        };
+
+        let db = null;
+        let firebaseEnabled = false;
+        try {
+            if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                firebaseEnabled = true;
+            } else {
+                console.warn('ยังไม่ได้ตั้งค่า Firebase (firebaseConfig) — ระบบจะใช้ Google Sheets ผ่าน Apps Script เป็นหลักทั้งหมด');
+            }
+        } catch (err) {
+            console.error('เชื่อมต่อ Firebase ไม่สำเร็จ:', err);
+            firebaseEnabled = false;
+        }
+
+        // ---------- ฟังก์ชันช่วยอ่าน/เขียนข้อมูล "คำขออนุมัติ" ใน Firestore (collection: requests) ----------
+
+        // อ่านคำขอทั้งหมด เรียงจากล่าสุดไปเก่าสุด ใช้ทั้งหน้า "ประวัติ" และตารางฝั่งแอดมิน
+        function firebaseGetRequests() {
+            return db.collection('requests').orderBy('timestamp', 'desc').get()
+                .then(snapshot => {
+                    let result = [];
+                    snapshot.forEach(doc => result.push(doc.data()));
+                    return result;
+                });
+        }
+
+        // บันทึก/อัปเดตคำขอ 1 รายการ โดยใช้รหัสคำขอ (เช่น "REQ-0009") เป็น document ID
+        function firebaseSaveRequest(id, data) {
+            if (!firebaseEnabled || !id) return Promise.resolve();
+            let payload = Object.assign({}, data, { id: id });
+            return db.collection('requests').doc(id).set(payload, { merge: true })
+                .catch(err => console.error('บันทึกลง Firebase ไม่สำเร็จ (requests):', err));
+        }
+
+        // ลบคำขอออกจาก Firestore
+        function firebaseDeleteRequest(id) {
+            if (!firebaseEnabled || !id) return Promise.resolve();
+            return db.collection('requests').doc(id).delete()
+                .catch(err => console.error('ลบข้อมูลใน Firebase ไม่สำเร็จ (requests):', err));
+        }
+
+        // ---------- ฟังก์ชันช่วยอ่าน/เขียน "ตั้งค่าดรอปดาวน์" ใน Firestore ----------
+
+        // collection: settings — document ID = ชื่อหมวด (project, purpose, funding_source, director_name2, director_name3)
+        function firebaseGetSettings() {
+            return db.collection('settings').get().then(snapshot => {
+                let result = { project: [], purpose: [], funding_source: [], director_name2: [], director_name3: [] };
+                snapshot.forEach(doc => { result[doc.id] = doc.data().items || []; });
+                return result;
+            });
+        }
+
+        function firebaseSaveSettingCategory(category, items) {
+            if (!firebaseEnabled) return Promise.resolve();
+            return db.collection('settings').doc(category).set({ items: items })
+                .catch(err => console.error('บันทึกลง Firebase ไม่สำเร็จ (settings):', err));
+        }
+
+        // collection: activities — document ID = ชื่อโครงการ
+        function firebaseGetActivities() {
+            return db.collection('activities').get().then(snapshot => {
+                let result = {};
+                snapshot.forEach(doc => { result[doc.id] = doc.data().items || []; });
+                return result;
+            });
+        }
+
+        function firebaseSaveActivities(project, items) {
+            if (!firebaseEnabled) return Promise.resolve();
+            return db.collection('activities').doc(project).set({ items: items })
+                .catch(err => console.error('บันทึกลง Firebase ไม่สำเร็จ (activities):', err));
+        }
+
+        // collection: plans — document ID = ชื่อโครงการ
+        function firebaseGetPlans() {
+            return db.collection('plans').get().then(snapshot => {
+                let result = {};
+                snapshot.forEach(doc => { result[doc.id] = doc.data().items || []; });
+                return result;
+            });
+        }
+
+        function firebaseSavePlans(project, items) {
+            if (!firebaseEnabled) return Promise.resolve();
+            return db.collection('plans').doc(project).set({ items: items })
+                .catch(err => console.error('บันทึกลง Firebase ไม่สำเร็จ (plans):', err));
+        }
+
+        // collection: deptProjects — document ID = ชื่อกลุ่มบริหาร
+        function firebaseGetDeptProjects() {
+            return db.collection('deptProjects').get().then(snapshot => {
+                let result = {};
+                snapshot.forEach(doc => { result[doc.id] = doc.data().items || []; });
+                return result;
+            });
+        }
+
+        function firebaseSaveDeptProjects(department, items) {
+            if (!firebaseEnabled) return Promise.resolve();
+            return db.collection('deptProjects').doc(department).set({ items: items })
+                .catch(err => console.error('บันทึกลง Firebase ไม่สำเร็จ (deptProjects):', err));
+        }
+
         // --- ส่วนควบคุมการแสดงผลหน้า (SPA Routing) ---
         function switchView(viewName) {
             // ซ่อนทุก Section ก่อน
@@ -576,6 +714,12 @@
         // ค่าแผนงานแยกตามโครงการ { "ชื่อโครงการ": ["แผนงาน1","แผนงาน2",...], ... }
         let appPlans = {};
 
+        // ค่าโครงการแยกตามกลุ่มบริหาร { "วิชาการ": ["โครงการ A","โครงการ B"], ... }
+        let appDeptProjects = {};
+
+        // รายชื่อกลุ่มบริหารที่ตายตัวของระบบ (ไม่ได้จัดการผ่านหน้าตั้งค่า)
+        const DEPARTMENT_LIST = ['วิชาการ', 'กิจการนักเรียน', 'งบประมาณและแผนงาน', 'ทั่วไป', 'งานบุคคล'];
+
         // ข้อมูล metadata ของแต่ละหมวด สำหรับแสดงในหน้าจัดการของแอดมิน
         const SETTINGS_CATEGORIES_META = [
             { key: 'project', label: 'โครงการ', icon: '📁' },
@@ -585,12 +729,14 @@
             { key: 'director_name3', label: 'ชื่อรองผู้อำนวยการ', icon: '👤' }
         ];
 
-        // ค่าที่กำลังแก้ไขอยู่ในหน้าตั้งค่า (แยกจาก appSettings/appActivities/appPlans จนกว่าจะกดบันทึก)
+        // ค่าที่กำลังแก้ไขอยู่ในหน้าตั้งค่า (แยกจาก appSettings/appActivities/appPlans/appDeptProjects จนกว่าจะกดบันทึก)
         let settingsDraft = {};
         let activitiesDraft = {};
         let currentActivityProject = ''; // โครงการที่กำลังจัดการกิจกรรมอยู่ในหน้าตั้งค่า
         let plansDraft = {};
         let currentPlanProject = ''; // โครงการที่กำลังจัดการแผนงานอยู่ในหน้าตั้งค่า
+        let deptProjectsDraft = {};
+        let currentDeptProjectDept = ''; // กลุ่มบริหารที่กำลังจัดการโครงการอยู่ในหน้าตั้งค่า
 
         // เอสเคปข้อความก่อนใส่เป็นค่า attribute ใน HTML template
         function escAttr(str) {
@@ -598,13 +744,40 @@
         }
 
         // โหลดค่าดรอปดาวน์ + กิจกรรมทั้งหมดจาก Backend แล้วเติมลงทุกฟอร์มในหน้าเว็บ (เรียกตอนโหลดหน้าเว็บครั้งแรก)
+        // โหลดค่าดรอปดาวน์ทั้งหมด: ถ้าตั้งค่า Firebase ไว้จะอ่านจาก Firestore ก่อน (เร็วกว่า)
+        // ถ้า Firebase ยังไม่ได้ตั้งค่า หรืออ่านไม่สำเร็จ จะ fallback ไปอ่านผ่าน Apps Script/Google Sheets แทนอัตโนมัติ
         function loadGlobalSettings() {
+            if (firebaseEnabled) {
+                return Promise.all([
+                    firebaseGetSettings(),
+                    firebaseGetActivities(),
+                    firebaseGetPlans(),
+                    firebaseGetDeptProjects()
+                ])
+                .then(([settings, activities, plans, deptProjects]) => {
+                    appSettings = settings;
+                    appActivities = activities;
+                    appPlans = plans;
+                    appDeptProjects = deptProjects;
+                    populateAllDropdowns();
+                })
+                .catch(error => {
+                    console.error('อ่านการตั้งค่าจาก Firebase ไม่สำเร็จ, จะลองใช้ Google Sheets แทน:', error);
+                    return loadGlobalSettingsFromSheets();
+                });
+            }
+            return loadGlobalSettingsFromSheets();
+        }
+
+        // สำรอง: โหลดค่าดรอปดาวน์ทั้งหมดผ่าน Apps Script/Google Sheets โดยตรง
+        function loadGlobalSettingsFromSheets() {
             return Promise.all([
                 callAPI('getSettings', {}),
                 callAPI('getActivities', {}),
-                callAPI('getPlans', {})
+                callAPI('getPlans', {}),
+                callAPI('getDeptProjects', {})
             ])
-            .then(([settingsRes, activitiesRes, plansRes]) => {
+            .then(([settingsRes, activitiesRes, plansRes, deptProjectsRes]) => {
                 if (settingsRes.success) {
                     appSettings = settingsRes.settings;
                 } else {
@@ -619,6 +792,11 @@
                     appPlans = plansRes.plans;
                 } else {
                     console.error('โหลดแผนงานล้มเหลว:', plansRes.message);
+                }
+                if (deptProjectsRes.success) {
+                    appDeptProjects = deptProjectsRes.deptProjects;
+                } else {
+                    console.error('โหลดโครงการตามกลุ่มบริหารล้มเหลว:', deptProjectsRes.message);
                 }
                 populateAllDropdowns();
             })
@@ -666,21 +844,30 @@
 
         // เติมดรอปดาวน์ทั้งหมด ทั้งในฟอร์มหลักและฟอร์มแก้ไขของแอดมิน
         function populateAllDropdowns() {
-            populateSelectOptions('project', appSettings.project, '-- เลือกโครงการ --');
             populateSelectOptions('purpose', appSettings.purpose, '-- เลือก --');
             populateSelectOptions('funding_source', appSettings.funding_source, '-- เลือกประเภทเงิน --');
             populateSelectOptions('director_name2', appSettings.director_name2, '-- เลือกผู้รับผิดชอบ --');
             populateSelectOptions('director_name3', appSettings.director_name3, '-- เลือกรองผู้อำนวยการ --');
 
-            populateSelectOptions('edit_project', appSettings.project, '-- เลือกโครงการ --');
             populateSelectOptions('edit_purpose', appSettings.purpose, '-- เลือก --');
             populateSelectOptions('edit_funding_source', appSettings.funding_source, '-- เลือกประเภทเงิน --');
             populateSelectOptions('edit_director_name2', appSettings.director_name2, '-- เลือกผู้รับผิดชอบ --');
             populateSelectOptions('edit_director_name3', appSettings.director_name3, '-- เลือกรองผู้อำนวยการ --');
 
-            // เติมรายการกิจกรรม (พิมพ์ได้) + แผนงาน (เลือกอย่างเดียว) ตามโครงการที่กำลังเลือกอยู่ในแต่ละฟอร์ม
-            onProjectFieldChange('project', 'activityDatalist', 'plan');
-            onProjectFieldChange('edit_project', 'editActivityDatalist', 'edit_plan');
+            // คาสเคด: กลุ่มบริหาร -> โครงการ -> กิจกรรม/แผนงาน (เติมตามค่าที่เลือกไว้อยู่แล้วในแต่ละฟอร์ม ถ้ามี)
+            onDepartmentFieldChange('department', 'project', 'activityDatalist', 'plan');
+            onDepartmentFieldChange('edit_department', 'edit_project', 'editActivityDatalist', 'edit_plan');
+        }
+
+        // --- ดรอปดาวน์ 2 ชั้น: เมื่อเลือกกลุ่มบริหาร ให้เติมรายชื่อโครงการของกลุ่มบริหารนั้น แล้วคาสเคดต่อไปยังกิจกรรม/แผนงาน ---
+        function onDepartmentFieldChange(deptSelectId, projectSelectId, activityDatalistId, planSelectId) {
+            let deptSelect = document.getElementById(deptSelectId);
+            if (!deptSelect) return;
+            let deptValue = deptSelect.value;
+            let placeholder = deptValue ? '-- เลือกโครงการ --' : '-- เลือกกลุ่มบริหารก่อน --';
+            populateSelectOptions(projectSelectId, appDeptProjects[deptValue] || [], placeholder);
+            // โครงการอาจถูกล้าง/เปลี่ยนไปเมื่อกลุ่มบริหารเปลี่ยน จึงต้องคาสเคดต่อไปยังกิจกรรม/แผนงานด้วย
+            onProjectFieldChange(projectSelectId, activityDatalistId, planSelectId);
         }
 
         // --- ดรอปดาวน์ 2 ชั้น: เมื่อเลือกโครงการ ให้เติมรายชื่อกิจกรรม (พิมพ์ได้) + แผนงาน (เลือกอย่างเดียว) ของโครงการนั้น ---
@@ -691,6 +878,18 @@
             populateDatalist(activityDatalistId, appActivities[projectValue] || []);
             if (planSelectId) {
                 populateSelectOptions(planSelectId, appPlans[projectValue] || [], '-- เลือกแผนงาน --');
+            }
+        }
+
+        // ถ้ากลุ่มบริหารที่เพิ่งแก้ไขโครงการ ตรงกับกลุ่มบริหารที่กำลังถูกเลือกอยู่ในฟอร์มหลัก/ฟอร์มแก้ไข ให้รีเฟรชตัวเลือกโครงการทันที
+        function refreshProjectDropdownsIfMatching(department) {
+            let deptSelect = document.getElementById('department');
+            let editDeptSelect = document.getElementById('edit_department');
+            if (deptSelect && deptSelect.value === department) {
+                onDepartmentFieldChange('department', 'project', 'activityDatalist', 'plan');
+            }
+            if (editDeptSelect && editDeptSelect.value === department) {
+                onDepartmentFieldChange('edit_department', 'edit_project', 'editActivityDatalist', 'edit_plan');
             }
         }
 
@@ -742,9 +941,10 @@
             Promise.all([
                 callAPI('getSettings', {}),
                 callAPI('getActivities', {}),
-                callAPI('getPlans', {})
+                callAPI('getPlans', {}),
+                callAPI('getDeptProjects', {})
             ])
-            .then(([settingsRes, activitiesRes, plansRes]) => {
+            .then(([settingsRes, activitiesRes, plansRes, deptProjectsRes]) => {
                 if (settingsRes.success) {
                     appSettings = settingsRes.settings;
                     settingsDraft = JSON.parse(JSON.stringify(appSettings)); // clone ไว้แก้ไขแยกจากของจริง
@@ -756,6 +956,10 @@
                 if (plansRes.success) {
                     appPlans = plansRes.plans;
                     plansDraft = JSON.parse(JSON.stringify(appPlans));
+                }
+                if (deptProjectsRes.success) {
+                    appDeptProjects = deptProjectsRes.deptProjects;
+                    deptProjectsDraft = JSON.parse(JSON.stringify(appDeptProjects));
                 }
                 renderSettingsPanel();
                 Swal.close();
@@ -829,6 +1033,25 @@
                 </div>
             `;
 
+            // การ์ดพิเศษ: โครงการ แยกตามกลุ่มบริหาร (ดรอปดาวน์ 2 ชั้น) — เลือกจากลิสต์โครงการที่มีอยู่แล้วเท่านั้น เพื่อกันพิมพ์ผิด/ไม่ตรงกัน
+            let deptOptionsHtml = DEPARTMENT_LIST
+                .map(d => `<option value="${escAttr(d)}">${escAttr(d)}</option>`)
+                .join('');
+
+            html += `
+                <div class="bg-white rounded-xl shadow p-5 lg:col-span-2">
+                    <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">🏢 โครงการ (แยกตามกลุ่มบริหาร)</h3>
+                    <div class="mb-3">
+                        <label class="block text-sm text-gray-600 mb-1">เลือกกลุ่มบริหารที่ต้องการกำหนดโครงการ</label>
+                        <select id="deptProjectSelector" class="input-field bg-white text-sm" onchange="onDeptProjectSelect()">
+                            <option value="">-- เลือกกลุ่มบริหาร --</option>
+                            ${deptOptionsHtml}
+                        </select>
+                    </div>
+                    <div id="deptProjectListContainer"></div>
+                </div>
+            `;
+
             container.innerHTML = html;
 
             // ผูก event เก็บค่าที่พิมพ์แก้ไขกลับเข้า settingsDraft (โดยไม่ต้อง re-render ทุกครั้งที่พิมพ์)
@@ -857,6 +1080,15 @@
                 currentPlanProject = '';
             }
             renderPlanList();
+
+            // คงกลุ่มบริหารที่กำลังจัดการโครงการไว้ แล้ววาดรายการ checkbox โครงการ
+            let deptProjectSelector = document.getElementById('deptProjectSelector');
+            if (currentDeptProjectDept && DEPARTMENT_LIST.indexOf(currentDeptProjectDept) !== -1) {
+                deptProjectSelector.value = currentDeptProjectDept;
+            } else {
+                currentDeptProjectDept = '';
+            }
+            renderDeptProjectList();
         }
 
         function addSettingItem(category) {
@@ -884,6 +1116,7 @@
                     Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', text: `อัปเดตรายการ "${meta.label}" เรียบร้อยแล้ว`, timer: 1500, showConfirmButton: false});
                     appSettings[category] = items;
                     settingsDraft[category] = items.slice();
+                    firebaseSaveSettingCategory(category, items); // มิเรอร์ไปยัง Firebase ด้วย
                     populateAllDropdowns();
                     renderSettingsPanel();
                 } else {
@@ -964,6 +1197,7 @@
                     Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', text: `อัปเดตกิจกรรมของ "${project}" เรียบร้อยแล้ว`, timer: 1500, showConfirmButton: false});
                     appActivities[project] = items;
                     activitiesDraft[project] = items.slice();
+                    firebaseSaveActivities(project, items); // มิเรอร์ไปยัง Firebase ด้วย
                     renderActivityList();
                     refreshActivityDatalistsIfMatching(project); // ถ้าโครงการนี้ถูกเลือกอยู่ในฟอร์ม ให้อัปเดตช่องกิจกรรมทันที
                 } else {
@@ -1044,8 +1278,73 @@
                     Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', text: `อัปเดตแผนงานของ "${project}" เรียบร้อยแล้ว`, timer: 1500, showConfirmButton: false});
                     appPlans[project] = items;
                     plansDraft[project] = items.slice();
+                    firebaseSavePlans(project, items); // มิเรอร์ไปยัง Firebase ด้วย
                     renderPlanList();
                     refreshPlanDatalistsIfMatching(project); // ถ้าโครงการนี้ถูกเลือกอยู่ในฟอร์ม ให้อัปเดตช่องแผนงานทันที
+                } else {
+                    Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('ข้อผิดพลาดทางเซิร์ฟเวอร์', error.message, 'error');
+            });
+        }
+
+        // --- จัดการโครงการของกลุ่มบริหารที่เลือกไว้ในการ์ด "โครงการ (แยกตามกลุ่มบริหาร)" ---
+        // ใช้ checkbox เลือกจากลิสต์โครงการที่มีอยู่แล้ว (การ์ด "โครงการ" ด้านบน) แทนการพิมพ์เอง เพื่อกันชื่อไม่ตรงกัน
+        function onDeptProjectSelect() {
+            currentDeptProjectDept = document.getElementById('deptProjectSelector').value;
+            renderDeptProjectList();
+        }
+
+        function renderDeptProjectList() {
+            let container = document.getElementById('deptProjectListContainer');
+            if (!container) return;
+
+            if (!currentDeptProjectDept) {
+                container.innerHTML = '<p class="text-sm text-gray-400">กรุณาเลือกกลุ่มบริหารก่อน</p>';
+                return;
+            }
+
+            let allProjects = settingsDraft.project || [];
+            if (allProjects.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-400">ยังไม่มีโครงการในระบบ กรุณาเพิ่มโครงการในการ์ด "โครงการ" ด้านบนก่อน</p>';
+                return;
+            }
+
+            let assigned = deptProjectsDraft[currentDeptProjectDept] || [];
+            let checkboxesHtml = allProjects.map(p => `
+                <label class="flex items-center gap-2 mb-2 text-sm">
+                    <input type="checkbox" class="dept-project-checkbox" data-project="${escAttr(p)}" ${assigned.indexOf(p) !== -1 ? 'checked' : ''}>
+                    <span>${escAttr(p)}</span>
+                </label>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="max-h-64 overflow-y-auto mb-3 pr-1 border rounded-lg p-3">
+                    ${checkboxesHtml}
+                </div>
+                <button type="button" onclick="saveDeptProjectList()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium text-sm">บันทึกโครงการของกลุ่มบริหารนี้</button>
+            `;
+        }
+
+        function saveDeptProjectList() {
+            if (!currentDeptProjectDept) return;
+            let department = currentDeptProjectDept;
+            let items = [];
+            document.querySelectorAll('.dept-project-checkbox').forEach(cb => {
+                if (cb.checked) items.push(cb.dataset.project);
+            });
+
+            Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading()});
+            callAPI('saveDeptProjects', { department: department, items: items })
+            .then(res => {
+                if (res.success) {
+                    Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', text: `อัปเดตโครงการของ "${department}" เรียบร้อยแล้ว`, timer: 1500, showConfirmButton: false});
+                    appDeptProjects[department] = items;
+                    deptProjectsDraft[department] = items.slice();
+                    firebaseSaveDeptProjects(department, items); // มิเรอร์ไปยัง Firebase ด้วย
+                    refreshProjectDropdownsIfMatching(department); // ถ้ากลุ่มบริหารนี้ถูกเลือกอยู่ในฟอร์ม ให้อัปเดตช่องโครงการทันที
                 } else {
                     Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
                 }
@@ -1207,6 +1506,14 @@
             callAPI('saveData', data)
             .then(res => {
                 if(res.success) {
+                    // มิเรอร์ข้อมูลไปยัง Firebase ด้วย (ไม่บล็อกการทำงานหลัก ถ้าล้มเหลว Google Sheets ยังเป็นข้อมูลจริงเสมอ)
+                    firebaseSaveRequest(res.id, Object.assign({}, data, {
+                        id: res.id,
+                        pdfUrl: res.pdfUrl,
+                        status: 'รออนุมัติ',
+                        timestamp: new Date().toISOString()
+                    }));
+
                     Swal.fire({
                         icon: 'success',
                         title: 'บันทึกสำเร็จ!',
@@ -1248,7 +1555,14 @@
         function loadHistoryData() {
             Swal.fire({title: 'กำลังโหลดข้อมูลประวัติ...', didOpen: () => Swal.showLoading()});
 
-            callAPI('getData', {})
+            let dataPromise = firebaseEnabled
+                ? firebaseGetRequests().catch(error => {
+                    console.error('อ่านประวัติจาก Firebase ไม่สำเร็จ, จะลองใช้ Google Sheets แทน:', error);
+                    return callAPI('getData', {});
+                  })
+                : callAPI('getData', {});
+
+            dataPromise
             .then(data => {
                 historyData = data || [];
                 populateHistoryProjectFilter();
@@ -1377,7 +1691,14 @@
         function loadData() {
             Swal.fire({title: 'กำลังโหลดข้อมูล...', didOpen: () => Swal.showLoading()});
 
-            callAPI('getData', {})
+            let dataPromise = firebaseEnabled
+                ? firebaseGetRequests().catch(error => {
+                    console.error('อ่านข้อมูลจาก Firebase ไม่สำเร็จ, จะลองใช้ Google Sheets แทน:', error);
+                    return callAPI('getData', {});
+                  })
+                : callAPI('getData', {});
+
+            dataPromise
             .then(data => {
                 allData = data;
                 let html = '';
@@ -1406,7 +1727,7 @@
                                 </td>
                                 <td class="p-3 text-center">
                                     <button onclick="openEdit(${index})" class="text-yellow-600 hover:bg-yellow-100 px-2 py-1 rounded mb-1 md:mb-0">✏️</button>
-                                    <button onclick="deleteRecord(${row.rowIndex})" class="text-red-600 hover:bg-red-100 px-2 py-1 rounded">🗑️</button>
+                                    <button onclick="deleteRecord('${row.id}')" class="text-red-600 hover:bg-red-100 px-2 py-1 rounded">🗑️</button>
                                 </td>
                             </tr>
                         `;
@@ -1422,7 +1743,7 @@
             });
         }
 
-        function deleteRecord(rowIndex) {
+        function deleteRecord(id) {
             Swal.fire({
                 title: 'ยืนยันการลบ?',
                 text: "ข้อมูลจะถูกลบออกจากฐานข้อมูลถาวร",
@@ -1435,10 +1756,11 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({title: 'กำลังลบ...', didOpen: () => Swal.showLoading()});
-                    callAPI('deleteData', { rowIndex: rowIndex })
+                    callAPI('deleteData', { id: id })
                     .then(res => {
                         if(res.success) {
                             Swal.fire('ลบสำเร็จ!', '', 'success');
+                            firebaseDeleteRequest(id); // มิเรอร์การลบไปยัง Firebase ด้วย
                             loadData();
                         } else {
                             Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
@@ -1454,7 +1776,7 @@
         function openEdit(dataIndex) {
             let row = allData[dataIndex];
             document.getElementById('editIdDisplay').innerText = row.id;
-            document.getElementById('editRowIndex').value = row.rowIndex;
+            document.getElementById('editRequestId').value = row.id;
 
             if(row.date) {
                 let d = new Date(row.date);
@@ -1462,6 +1784,7 @@
             }
 
             document.getElementById('edit_department').value = row.department || '';
+            onDepartmentFieldChange('edit_department', 'edit_project', 'editActivityDatalist', 'edit_plan'); // เติมตัวเลือกโครงการของกลุ่มบริหารนี้ก่อน
             document.getElementById('edit_group').value = row.group || '';
             document.getElementById('edit_project').value = row.project || '';
             onProjectFieldChange('edit_project', 'editActivityDatalist', 'edit_plan'); // เติมรายชื่อกิจกรรม/แผนงานของโครงการนี้ก่อนตั้งค่า
@@ -1598,8 +1921,7 @@
         }
 
         function saveEdit() {
-            let rowIndex = document.getElementById('editRowIndex').value;
-            let reqId = document.getElementById('editIdDisplay').innerText; // ดึงรหัส ID ออกมา
+            let reqId = document.getElementById('editRequestId').value;
 
             let items = [];
             let rows = document.getElementById('editTableBody').querySelectorAll('tr');
@@ -1615,7 +1937,7 @@
             });
 
             let updatedData = {
-                id: reqId, // ส่งรหัส ID ไปให้ Backend เพื่อใช้ตั้งชื่อไฟล์ PDF ใหม่
+                id: reqId, // ส่งรหัส ID ไปให้ Backend ใช้ค้นหาแถวจริงในชีต + ตั้งชื่อไฟล์ PDF ใหม่
                 date: document.getElementById('edit_date').value,
                 department: document.getElementById('edit_department').value,
                 group: document.getElementById('edit_group').value,
@@ -1639,10 +1961,16 @@
             };
 
             Swal.fire({title: 'กำลังบันทึกและสร้าง PDF ใหม่...', didOpen: () => Swal.showLoading()});
-            callAPI('updateData', { rowIndex: rowIndex, data: updatedData })
+            callAPI('updateData', { id: reqId, data: updatedData })
             .then(res => {
                 if(res.success) {
                     Swal.fire('บันทึกสำเร็จ!', 'อัปเดตข้อมูลและสร้างเอกสาร PDF ใหม่เรียบร้อยแล้ว', 'success');
+                    // มิเรอร์ข้อมูลไปยัง Firebase ด้วย (ไม่บล็อกการทำงานหลัก ถ้าล้มเหลว Google Sheets ยังเป็นข้อมูลจริงเสมอ)
+                    firebaseSaveRequest(reqId, Object.assign({}, updatedData, {
+                        pdfUrl: res.pdfUrl,
+                        status: 'รออนุมัติ',
+                        timestamp: new Date().toISOString()
+                    }));
                     closeEditModal();
                     loadData();
                 } else {
